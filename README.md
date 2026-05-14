@@ -10,12 +10,89 @@ The core question is:
 
 `git-preflight` is not a replacement for `git status`. It is a workspace-level safety check.
 
+## Build
+
+Build the CLI from the repository root:
+
+```sh
+go build -o git-preflight ./cmd/git-preflight
+```
+
+Release builds can inject a version string:
+
+```sh
+go build -ldflags "-X main.version=v0.1.0" -o git-preflight ./cmd/git-preflight
+```
+
+## Test
+
+Run the test suite:
+
+```sh
+go test ./...
+```
+
+Tests create temporary real Git repositories and require `git` on `$PATH`.
+
+If the default Go build cache is not writable, set `GOCACHE`:
+
+```sh
+GOCACHE=/tmp/git-preflight-go-cache go test ./...
+```
+
+## Install
+
+Install the latest CLI with Go:
+
+```sh
+go install github.com/5cover/git-preflight/cmd/git-preflight@latest
+```
+
+Go installs the executable into `$GOBIN`, or `$GOPATH/bin` when `$GOBIN` is unset. Ensure that directory is on `$PATH`.
+
+This installs the binary only. To install the manpage manually on Unix-like systems:
+
+```sh
+install -Dm644 docs/man/git-preflight.1 /usr/local/share/man/man1/git-preflight.1
+mandb 2>/dev/null || true
+```
+
+Release archives include the binary, `README.md`, and `man/man1/git-preflight.1`.
+
 ## Installation model
 
 The executable is named `git-preflight`
 
 When `git-preflight` is available on `$PATH`, Git automatically exposes it as `git preflight`
 No Git alias is required.
+
+## Distribution
+
+Create release archives from the repository root:
+
+```sh
+VERSION=v0.1.0 ./scripts/build-release.sh
+```
+
+The script writes archives and `checksums.txt` to `dist/` for:
+
+- `linux-amd64`
+- `linux-arm64`
+- `darwin-amd64`
+- `darwin-arm64`
+- `windows-amd64`
+
+GitHub Releases are the primary upstream binary distribution channel.
+
+Other useful distribution channels:
+
+- Homebrew tap for macOS and Linux, including binary and manpage installation.
+- Winget, Scoop, or Chocolatey for Windows binary installation.
+- Debian `.deb` and Fedora/RHEL `.rpm` packages for system package managers, including manpage installation.
+- Arch Linux PKGBUILD/AUR for Arch users.
+- Nix package or flake for reproducible installs.
+
+The Go module is published by tagging releases. Users can import `github.com/5cover/git-preflight` as a library or install the CLI with `go install`.
 
 ## Basic usage
 
