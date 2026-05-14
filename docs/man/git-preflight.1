@@ -1,0 +1,102 @@
+.TH GIT-PREFLIGHT 1
+.SH NAME
+git-preflight \- check Git repositories for local state before leaving a checkout behind
+.SH SYNOPSIS
+.B git preflight
+[\fIoptions\fR] [\fIpath\fR]
+.br
+.B git-preflight
+[\fIoptions\fR] [\fIpath\fR]
+.SH DESCRIPTION
+.B git-preflight
+checks whether Git repositories contain local state that would be lost or stranded
+if the checkout disappeared. It is intended as a workspace-level safety check,
+not as a replacement for
+.BR git-status (1).
+.PP
+By default, clean repositories produce no output. Any normal output means that
+attention is required.
+.SH OPTIONS
+.TP
+.BR \-r ", " \-\-recursive
+Recursively scan for Git repositories below the path. Nested repositories,
+submodules, and worktrees are inspected independently.
+.TP
+.BR \-v ", " \-\-verbose
+Print clean repositories as well as repositories with findings.
+.TP
+.BR \-\-json
+Print machine-readable JSON. Clean repositories are included only with
+.BR \-\-verbose .
+.TP
+.BR \-q ", " \-\-quiet
+Suppress normal output. Exit codes still apply.
+.TP
+.BR \-\-fail-fast
+Stop scanning after the first repository with local state.
+.TP
+.BR \-\-no-stash
+Do not consider stash entries local state.
+.TP
+.BR \-\-no-operations
+Do not consider in-progress Git operations local state.
+.TP
+.BR \-\-version
+Print the program version and exit.
+.TP
+.BR \-h ", " \-\-help
+Print usage information and exit.
+.SH FINDINGS
+Findings are printed in this order when present:
+.BR dirty ,
+.BR error ,
+.BR staged ,
+.BR detached ,
+.BR noremote ,
+.BR unpushed ,
+.BR unstaged ,
+.BR stash ,
+and
+.BR operation .
+.PP
+.B unstaged
+includes untracked, non-ignored files. Ignored files do not count as local
+state.
+.SH OUTPUT
+Human output is line-oriented:
+.PP
+.EX
+unpushed unstaged  site
+noremote           plugin
+.EE
+.PP
+JSON output has this shape:
+.PP
+.EX
+{
+  "root": "/home/user/repos",
+  "recursive": true,
+  "repositories": [
+    {"path": "/home/user/repos/site", "findings": ["unpushed", "unstaged"]}
+  ]
+}
+.EE
+.SH EXIT STATUS
+.TP
+.B 0
+No local state found.
+.TP
+.B 1
+Local state found.
+.TP
+.B 2
+Operational error.
+.SH EXAMPLES
+.EX
+git preflight
+git preflight -r ~/repos
+git preflight -r --verbose --json ~/repos
+.EE
+.SH SEE ALSO
+.BR git-status (1),
+.BR git-rev-parse (1)
