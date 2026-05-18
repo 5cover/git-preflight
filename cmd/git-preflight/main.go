@@ -2,12 +2,11 @@ package main
 
 import (
 	"context"
-	"errors"
-	"flag"
 	"fmt"
 	"os"
 
 	preflight "github.com/5cover/git-preflight"
+	flag "github.com/spf13/pflag"
 )
 
 var version = "dev"
@@ -23,13 +22,10 @@ func run(args []string) int {
 
 	fs := flag.NewFlagSet("git-preflight", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
-	fs.BoolVar(&opts.Recursive, "r", false, "recursively scan for Git repositories")
-	fs.BoolVar(&opts.Recursive, "recursive", false, "recursively scan for Git repositories")
-	fs.BoolVar(&opts.Verbose, "v", false, "print clean repositories as well")
-	fs.BoolVar(&opts.Verbose, "verbose", false, "print clean repositories as well")
+	fs.BoolVarP(&opts.Recursive, "recursive", "r", false, "recursively scan for Git repositories")
+	fs.BoolVarP(&opts.Verbose, "verbose", "v", false, "print clean repositories as well")
 	fs.BoolVar(&jsonOut, "json", false, "print JSON output")
-	fs.BoolVar(&opts.Quiet, "q", false, "suppress normal output")
-	fs.BoolVar(&opts.Quiet, "quiet", false, "suppress normal output")
+	fs.BoolVarP(&opts.Quiet, "quiet", "q", false, "suppress normal output")
 	fs.BoolVar(&opts.FailFast, "fail-fast", false, "stop after first repository with local state")
 	noStash := fs.Bool("no-stash", false, "do not consider stashes local state")
 	noOperations := fs.Bool("no-operations", false, "do not consider in-progress operations local state")
@@ -40,7 +36,7 @@ func run(args []string) int {
 	}
 
 	if err := fs.Parse(args); err != nil {
-		if errors.Is(err, flag.ErrHelp) {
+		if err == flag.ErrHelp {
 			return 0
 		}
 		return 2
