@@ -17,19 +17,18 @@ func main() {
 
 func run(args []string) int {
 	opts := preflight.DefaultOptions()
-	var jsonOut bool
-	var showVersion bool
 
 	fs := flag.NewFlagSet("git-preflight", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	fs.BoolVarP(&opts.Recursive, "recursive", "r", false, "recursively scan for Git repositories")
 	fs.BoolVarP(&opts.Verbose, "verbose", "v", false, "print clean repositories as well")
-	fs.BoolVar(&jsonOut, "json", false, "print JSON output")
 	fs.BoolVarP(&opts.Quiet, "quiet", "q", false, "suppress normal output")
 	fs.BoolVar(&opts.FailFast, "fail-fast", false, "stop after first repository with local state")
+	jsonOut := fs.Bool("json", false, "print JSON output")
+	showVersion := fs.Bool("version", false, "print version and exit")
 	noStash := fs.Bool("no-stash", false, "do not consider stashes local state")
 	noOperations := fs.Bool("no-operations", false, "do not consider in-progress operations local state")
-	fs.BoolVar(&showVersion, "version", false, "print version and exit")
+	noProgress := fs.Bool("no-progress", false, "do not display progress reports")
 	fs.Usage = func() {
 		fmt.Fprintf(fs.Output(), "Usage: git preflight [options] [path]\n\nOptions:\n")
 		fs.PrintDefaults()
@@ -41,7 +40,7 @@ func run(args []string) int {
 		}
 		return 2
 	}
-	if showVersion {
+	if *showVersion {
 		fmt.Fprintf(os.Stdout, "git-preflight %s\n", version)
 		return 0
 	}
@@ -52,9 +51,11 @@ func run(args []string) int {
 	if fs.NArg() == 1 {
 		opts.Path = fs.Arg(0)
 	}
+
 	opts.IncludeStash = !*noStash
 	opts.IncludeOperation = !*noOperations
-	if opts.Recursive && !opts.Quiet && !jsonOut && isTerminal(os.Stderr) {
+
+	if !*noProgress && opts.Recursive && !opts.Quiet && isTerminal(os.Stderr) {
 		opts.ProgressWriter = os.Stderr
 	}
 
@@ -69,7 +70,7 @@ func run(args []string) int {
 		}
 	}
 	if !opts.Quiet {
-		if jsonOut {
+		if *jsonOut {
 			if err := preflight.WriteJSON(os.Stdout, result); err != nil {
 				fmt.Fprintf(os.Stderr, "git-preflight: %v\n", err)
 				return 2

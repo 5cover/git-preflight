@@ -947,7 +947,7 @@ Tests verify:
 - progress output appears only on terminals
 - progress output is written to stderr
 - stdout remains parseable
-- `--json` suppresses progress output
+- `--no-progress` suppresses progress output
 - `--quiet` suppresses progress output
 
 Tests does not depend on ANSI escape support.
